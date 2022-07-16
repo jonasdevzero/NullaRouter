@@ -1,28 +1,10 @@
 import { RouteHandler } from "../@types/RouteHandler";
+import RouteNode from "./RouteNode";
 import RouteNodeMapper from "./RouteNodeMapper";
 
 const WILDCARD = 42;
 const PARAMETRIC = 58;
 const PARAMETRIC_END = "/";
-
-class RouteNode {
-  label: string;
-  children: RouteNode[];
-  handler: RouteHandler | null;
-
-  wildcardChild: RouteNode | null;
-  parametricChild: RouteNode | null;
-  paramsName: string[];
-
-  constructor(label: string) {
-    this.label = label;
-    this.children = [];
-    this.handler = null;
-    this.wildcardChild = null;
-    this.parametricChild = null;
-    this.paramsName = [];
-  }
-}
 
 class RouterTree {
   root: RouteNode;
@@ -161,5 +143,4 @@ class RouterTree {
   }
 }
 
-export { RouteNode };
 export default RouterTree;
