@@ -9,13 +9,6 @@ const defaultHandle = (_: IncomingMessage, response: ServerResponse) => {
   response.end("OK");
 };
 
-const adminRoutes = new Router();
-adminRoutes.get("/", (_, res) => res.end("Admin"));
-adminRoutes.get("/:userId", (_, res) => res.end("Parametric admin"));
-adminRoutes.get("/:userId/data", (_, res) => res.end("Parametric admin"));
-adminRoutes.get("/profile/data/*", defaultHandle);
-adminRoutes.get("/:tokenId/:profileId", defaultHandle);
-
 router.get("/", (_, res) => res.end("root route"));
 router.get("/client/*", (_, res) => res.end("Wildcard"));
 
@@ -31,6 +24,13 @@ router.get("/user/:id/token/*", (_, res) => res.end("Parametric w/ wildcard"));
 router.get("/user/:id/:token/*", (_, res) =>
   res.end("Multiple parametric w/ wildcard")
 );
+
+const adminRoutes = new Router();
+adminRoutes.get("/", (_, res) => res.end("Admin"));
+adminRoutes.get("/:userId", (_, res) => res.end("Parametric admin"));
+adminRoutes.get("/:userId/data", (_, res) => res.end("Parametric admin"));
+adminRoutes.get("/profile/data/*", defaultHandle);
+adminRoutes.get("/:tokenId/:profileId", defaultHandle);
 
 router.use("/admin", adminRoutes);
 
