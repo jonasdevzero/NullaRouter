@@ -1,5 +1,5 @@
 import type { RouteHandler } from "../@types/RouteHandler";
-import { RouteNode } from "./RouterTree";
+import RouteNode from "./RouteNode";
 
 interface MappedRouteNode {
   path: string;
