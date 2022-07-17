@@ -47,7 +47,7 @@ class RouteNodeMapper {
     if (!node.handler) return;
 
     if (this.hasParametric(mappedPath) && this.hasParams(node))
-      mappedPath = this.createParametricPath(mappedPath, node.paramsName);
+      mappedPath = this.createParametricPath(mappedPath, node.params);
 
     this.nodes.push({ path: mappedPath, handler: node.handler });
   }
@@ -57,7 +57,7 @@ class RouteNodeMapper {
   }
 
   private static hasParams(node: RouteNode) {
-    return !!node.paramsName.length;
+    return !!node.params.length;
   }
 
   private static createParametricPath(path: string, params: string[]) {

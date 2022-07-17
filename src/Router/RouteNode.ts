@@ -7,7 +7,7 @@ class RouteNode {
 
   wildcardChild: RouteNode | null;
   parametricChild: RouteNode | null;
-  paramsName: string[];
+  params: string[];
 
   constructor(label: string) {
     this.label = label;
@@ -15,7 +15,7 @@ class RouteNode {
     this.handler = null;
     this.wildcardChild = null;
     this.parametricChild = null;
-    this.paramsName = [];
+    this.params = [];
   }
 }
 

@@ -13,47 +13,35 @@ class RouterTree {
     this.root = new RouteNode("\0");
   }
 
-  insertChild(label: string, handler: RouteHandler) {
+  insertChild(path: string, handler: RouteHandler) {
     let currentNode = this.root;
     const params = [] as string[];
 
-    for (let currentIndex = 0; currentIndex < label.length; currentIndex++) {
-      const charIndex = label.charCodeAt(currentIndex);
+    for (let index = 0; index < path.length; index++) {
+      const charCode = path.charCodeAt(index);
 
-      if (this.isWildcard(charIndex)) {
+      if (this.isWildcard(charCode)) {
         currentNode = this.insertAndReturnWildcardNode(currentNode);
         break;
       }
 
-      if (this.isParametric(charIndex)) {
-        currentNode = currentNode.parametricChild
-          ? currentNode.parametricChild
-          : this.insertAndReturnParametricNode(currentNode);
-
-        const parametricEnd = this.getParametricIndexEnd(label, currentIndex);
-
-        const parametricName = label.slice(currentIndex + 1, parametricEnd);
-        params.push(parametricName);
-
-        currentIndex = parametricEnd;
-
+      if (this.isParametric(charCode)) {
+        currentNode = this.insertAndReturnParametricNode(currentNode);
+        index = this.pushParamAndReturnNextIndex(params, path, index);
         continue;
       }
 
-      const child = currentNode.children[charIndex];
+      const nextNode = currentNode.children[charCode];
 
-      if (!child) {
-        const childNode = new RouteNode(label.charAt(currentIndex));
-        currentNode.children[charIndex] = childNode;
-
-        currentNode = childNode;
+      if (!nextNode) {
+        currentNode = this.insertAndReturnStaticNode(currentNode, charCode);
         continue;
       }
 
-      currentNode = child;
+      currentNode = nextNode;
     }
 
-    currentNode.paramsName = params;
+    currentNode.params = params;
     currentNode.handler = handler;
   }
 
@@ -73,14 +61,36 @@ class RouterTree {
   }
 
   private insertAndReturnParametricNode(node: RouteNode) {
+    if (node.parametricChild) return node.parametricChild;
+
     const parametricChild = new RouteNode(":");
     node.parametricChild = parametricChild;
 
     return parametricChild;
   }
 
+  private pushParamAndReturnNextIndex(
+    params: string[],
+    label: string,
+    startIndex: number
+  ) {
+    const paramIndexEnd = this.getParametricIndexEnd(label, startIndex);
+
+    const parametricName = label.slice(startIndex + 1, paramIndexEnd);
+    params.push(parametricName);
+
+    return paramIndexEnd;
+  }
+
   private getParametricIndexEnd(label: string, startIndex: number) {
     return label.slice(startIndex).split(PARAMETRIC_END)[0].length + startIndex;
+  }
+
+  private insertAndReturnStaticNode(node: RouteNode, charCode: number) {
+    const staticNode = new RouteNode(String.fromCharCode(charCode));
+    node.children[charCode] = staticNode;
+
+    return staticNode;
   }
 
   lookup(path: string) {
@@ -114,7 +124,7 @@ class RouterTree {
 
     if (paramsValue.length) {
       let paramIndex = 0;
-      for (const paramName of currentNode.paramsName) {
+      for (const paramName of currentNode.params) {
         params[paramName] = paramsValue[paramIndex];
         paramIndex++;
       }
