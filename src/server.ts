@@ -27,10 +27,14 @@ router.get("/user/:id/:token/*", (_, res) =>
 
 const adminRoutes = new Router();
 adminRoutes.get("/", (_, res) => res.end("Admin"));
-adminRoutes.get("/:userId", (_, res) => res.end("Parametric admin"));
 adminRoutes.get("/:userId/data", (_, res) => res.end("Parametric admin"));
-adminRoutes.get("/profile/data/*", defaultHandle);
-adminRoutes.get("/:tokenId/:profileId", defaultHandle);
+adminRoutes.get("/:userId", (_, res) =>
+  res.end("Parametric admin without / end")
+);
+adminRoutes.get("/profile/data/*", (_, res) => res.end("Wildcard admin"));
+adminRoutes.get("/:tokenId/:profileId", (_, res) =>
+  res.end("Multiple parametric admin")
+);
 
 router.use("/admin", adminRoutes);
 

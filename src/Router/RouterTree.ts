@@ -45,6 +45,46 @@ class RouterTree {
     currentNode.handler = handler;
   }
 
+  lookup(path: string) {
+    let currentNode = this.root;
+    const params = {} as { [key: string]: string };
+    const paramsValue: string[] = [];
+
+    for (let currentIndex = 0; currentIndex < path.length; currentIndex++) {
+      const child = currentNode.children[path.charCodeAt(currentIndex)];
+
+      if (!child) {
+        if (!!currentNode.wildcardChild) {
+          paramsValue.push(path.slice(currentIndex));
+          return currentNode.wildcardChild.handler;
+        }
+
+        if (!!currentNode.parametricChild) {
+          currentNode = currentNode.parametricChild;
+          const parametricEnd = this.getParametricIndexEnd(path, currentIndex);
+          paramsValue.push(path.slice(currentIndex, parametricEnd));
+
+          currentIndex = parametricEnd;
+          continue;
+        }
+
+        return null;
+      }
+
+      currentNode = child;
+    }
+
+    if (paramsValue.length) {
+      let paramIndex = 0;
+      for (const paramName of currentNode.params) {
+        params[paramName] = paramsValue[paramIndex];
+        paramIndex++;
+      }
+    }
+
+    return currentNode.handler;
+  }
+
   private isWildcard(charCode: number) {
     return charCode === WILDCARD;
   }
@@ -91,46 +131,6 @@ class RouterTree {
     node.children[charCode] = staticNode;
 
     return staticNode;
-  }
-
-  lookup(path: string) {
-    let currentNode = this.root;
-    const params = {} as { [key: string]: string };
-    const paramsValue: string[] = [];
-
-    for (let currentIndex = 0; currentIndex < path.length; currentIndex++) {
-      const child = currentNode.children[path.charCodeAt(currentIndex)];
-
-      if (!child) {
-        if (!!currentNode.wildcardChild) {
-          paramsValue.push(path.slice(currentIndex));
-          return currentNode.wildcardChild.handler;
-        }
-
-        if (!!currentNode.parametricChild) {
-          currentNode = currentNode.parametricChild;
-          const parametricEnd = this.getParametricIndexEnd(path, currentIndex);
-          paramsValue.push(path.slice(currentIndex, parametricEnd));
-
-          currentIndex = parametricEnd;
-          continue;
-        }
-
-        return null;
-      }
-
-      currentNode = child;
-    }
-
-    if (paramsValue.length) {
-      let paramIndex = 0;
-      for (const paramName of currentNode.params) {
-        params[paramName] = paramsValue[paramIndex];
-        paramIndex++;
-      }
-    }
-
-    return currentNode.handler;
   }
 
   mergeTree(tree: RouterTree, prefix: string = "") {
