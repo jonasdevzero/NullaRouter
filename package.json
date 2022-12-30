@@ -2,30 +2,39 @@
   "name": "nulla-router",
   "version": "0.0.0",
   "description": "A very fast HTTP router",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "jest --passWithNoTests --silent --noStackTrace --runInBand",
     "test:verbose": "--passWithNoTests --runInBand",
     "build": "tsc",
-    "prepare": "husky install"
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "prepare": "npm run build && husky install",
+    "prepublishOnly": "npm test && npx lint-staged",
+    "preversion": "npx lint-staged",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jonasdevzero/NullasRouter.git"
+    "url": "git+https://github.com/jonasdevzero/NullaRouter.git"
   },
   "files": [
     "lib/**/*"
   ],
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "router",
+    "http-router"
+  ],
+  "author": "jonasdevzero",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jonasdevzero/NullasRouter/issues"
+    "url": "https://github.com/jonasdevzero/NullaRouter/issues"
   },
-  "homepage": "https://github.com/jonasdevzero/NullasRouter#readme",
+  "homepage": "https://github.com/jonasdevzero/NullaRouter#readme",
   "devDependencies": {
     "@commitlint/cli": "^17.3.0",
     "@commitlint/config-conventional": "^17.3.0",
