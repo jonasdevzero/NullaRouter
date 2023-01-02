@@ -8,7 +8,7 @@
     "test": "jest --passWithNoTests --silent --noStackTrace --runInBand",
     "test:verbose": "--passWithNoTests --runInBand",
     "build": "tsc",
-    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "format": "prettier --write \"src/**/*.ts\"",
     "prepare": "npm run build && husky install",
     "prepublishOnly": "npm test && npx lint-staged",
     "preversion": "npx lint-staged",
