@@ -65,10 +65,10 @@ export class RouteNode {
 
   private insertWildcardNode(path: string) {
     const wildcardIndex = path.indexOf('*');
-
     if (wildcardIndex === -1) return this;
 
-    const parentNode = this.insert(path.slice(0, wildcardIndex));
+    const parentPath = path.slice(0, wildcardIndex);
+    const parentNode = parentPath ? this.insert(parentPath) : this;
 
     const wildcardNode = new RouteNode('*');
     wildcardNode.type = RouteNodeType.WILDCARD;
@@ -80,12 +80,13 @@ export class RouteNode {
 
   private insertParametricNode(path: string) {
     const parametricIndex = path.indexOf('/:');
-
     if (parametricIndex === -1) return this;
 
     const parentPath = path.slice(0, parametricIndex);
-
     const parentNode = parentPath ? this.insert(parentPath) : this;
+
+    if (parentNode.parametricNode) return parentNode.parametricNode;
+
     const parametricNode = new RouteNode(':');
 
     parametricNode.type = RouteNodeType.PARAMETRIC;
