@@ -134,13 +134,22 @@ export class RouteNode {
     }
   }
 
-  private print(node: RouteNode, level = 1, before = '', isEnd = false) {
+  private print(node: RouteNode | null, level = 1, before = '', isEnd = false) {
+    if (node === null) return;
+
     const ident = isEnd ? '└──' : '├──';
-    const type = node.handler ? '+' : '-';
+    const handler = node.handler ? '+' : '-';
+    const params = node.paramsName?.toString() || '';
 
-    console.log(`${before}${ident} ${type} ${node.prefix}`);
+    console.log(`${before}${ident} ${handler} ${node.prefix} [${params}]`);
 
-    const children = Object.values(node.children);
+    const nodes = {
+      ...node.children,
+      wildcard: node.wildcardNode,
+      parametric: node.parametricNode,
+    };
+
+    const children = Object.values(nodes);
     const size = children.length;
     const newBefore = before + (!isEnd && level > 1 ? '│  ' : '  ');
 
