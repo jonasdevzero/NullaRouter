@@ -1,3 +1,4 @@
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { RouteNode } from './RouteNode';
 import { Stack } from './Stack';
 import { BrotherNode, HttpMethod, NodeType, RouteHandler } from './types';
@@ -129,6 +130,22 @@ export class Router {
       params['*'] = path.slice(lastWildcardIndex + 1);
 
     return { handler, params };
+  }
+
+  lookup(request: IncomingMessage, response: ServerResponse) {
+    const { method = 'GET', url = '/' } = request;
+    const [path] = url.split('?');
+
+    const route = this.find(method, path);
+
+    if (!route || !route.handler) {
+      response.statusCode = 404;
+      return response.end('Route not found');
+    }
+
+    const { handler, params } = route;
+
+    handler(request, response, params);
   }
 
   get(path: string, handler: RouteHandler) {
