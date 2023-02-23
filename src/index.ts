@@ -1,4 +1,5 @@
 import { Router } from './Router';
-export * from './RouteHandler';
+import { HttpMethod, RouteHandler, RouteParams } from './types';
 
+export { HttpMethod, RouteHandler, RouteParams };
 export default Router;

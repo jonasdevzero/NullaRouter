@@ -1,22 +1,12 @@
-import { RouteHandler } from './RouteHandler';
-import { RouteNode, RouteNodeType } from './RouteNode';
+import { RouteNode } from './RouteNode';
+import { Stack } from './Stack';
+import { BrotherNode, HttpMethod, NodeType, RouteHandler } from './types';
 
 const WILDCARD = 42;
 const PARAMETRIC = 58;
 
-export type HttpMethod =
-  | 'GET'
-  | 'POST'
-  | 'PUT'
-  | 'PATCH'
-  | 'DELETE'
-  | 'HEAD'
-  | 'OPTIONS'
-  | 'CONNECT'
-  | 'TRACE';
-
 export class Router {
-  private readonly trees = {} as { [key: string]: RouteNode };
+  readonly trees = {} as { [key: string]: RouteNode };
 
   on(method: HttpMethod, path: string, handler: RouteHandler) {
     if (!this.trees[method]) {
@@ -84,17 +74,24 @@ export class Router {
     let wildcardNode = currentNode.wildcardNode;
     let lastWildcardIndex = 0;
 
+    const nodeStack = new Stack<BrotherNode>();
     const params: { [key: string]: string } = {};
     const paramsValues: string[] = [];
 
     while (true) {
       if (readLength === totalLength) break;
 
-      currentNode = currentNode.next(path, readLength);
+      currentNode = currentNode.next(path, readLength, nodeStack);
 
-      if (!currentNode) break;
+      if (!currentNode) {
+        if (nodeStack.isEmpty()) return null;
 
-      if (currentNode.type === RouteNodeType.PARAMETRIC) {
+        const brother = nodeStack.pop() as BrotherNode;
+        readLength = brother.pathIndex;
+        currentNode = brother.node;
+      }
+
+      if (currentNode.type === NodeType.PARAMETRIC) {
         let nextIndex = path.indexOf('/', readLength + 1);
         nextIndex = nextIndex === -1 ? totalLength : nextIndex;
 
@@ -106,7 +103,7 @@ export class Router {
 
       readLength += currentNode.prefix.length;
 
-      if (currentNode.type === RouteNodeType.WILDCARD) {
+      if (currentNode.type === NodeType.WILDCARD) {
         lastWildcardIndex = readLength;
         break;
       }
@@ -128,7 +125,7 @@ export class Router {
       for (let index = 0; index < paramsName.length; index++)
         params[paramsName[index]] = paramsValues[index];
 
-    if (type === RouteNodeType.WILDCARD)
+    if (type === NodeType.WILDCARD)
       params['*'] = path.slice(lastWildcardIndex + 1);
 
     return { handler, params };

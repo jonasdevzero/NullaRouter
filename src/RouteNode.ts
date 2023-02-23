@@ -1,17 +1,12 @@
-import { RouteHandler } from './RouteHandler';
+import { Stack } from './Stack';
+import { BrotherNode, NodeType, RouteHandler } from './types';
 
 const WILDCARD = 42;
 const PARAMETRIC = 58;
 
-export enum RouteNodeType {
-  STATIC = 0,
-  PARAMETRIC = 1,
-  WILDCARD = 2,
-}
-
 export class RouteNode {
   prefix: string;
-  type: RouteNodeType = RouteNodeType.STATIC;
+  type: NodeType = NodeType.STATIC;
   handler: RouteHandler | null = null;
   private match: Function = () => true;
 
@@ -71,7 +66,7 @@ export class RouteNode {
     const parentNode = parentPath ? this.insert(parentPath) : this;
 
     const wildcardNode = new RouteNode('*');
-    wildcardNode.type = RouteNodeType.WILDCARD;
+    wildcardNode.type = NodeType.WILDCARD;
 
     parentNode.wildcardNode = wildcardNode;
 
@@ -89,7 +84,7 @@ export class RouteNode {
 
     const parametricNode = new RouteNode(':');
 
-    parametricNode.type = RouteNodeType.PARAMETRIC;
+    parametricNode.type = NodeType.PARAMETRIC;
     parentNode.parametricNode = parametricNode;
 
     return parametricNode;
@@ -112,13 +107,46 @@ export class RouteNode {
     return node;
   }
 
-  next(path: string, startIndex: number) {
-    const node = this.children[path.charAt(startIndex)];
+  next(path: string, startIndex: number, nodeStack: Stack<BrotherNode>) {
+    const node = this.findNextStaticNode(path, startIndex);
 
-    if (!node || !node.match(path, startIndex)) {
-      return this.parametricNode || this.wildcardNode;
-    }
+    if (!node) return this.parametricNode || this.wildcardNode;
+
+    if (this.wildcardNode !== null)
+      nodeStack.push({ pathIndex: startIndex, node: this.wildcardNode });
+
+    if (this.parametricNode !== null)
+      nodeStack.push({ pathIndex: startIndex, node: this.parametricNode });
 
     return node;
+  }
+
+  private findNextStaticNode(path: string, startIndex: number) {
+    let node: RouteNode | null = this.children[path.charAt(startIndex)];
+
+    if (!node || !node.match(path, startIndex)) return null;
+    return node;
+  }
+
+  prettyPrint() {
+    for (const child of Object.values(this.children)) {
+      this.print(child, 1, '', true);
+    }
+  }
+
+  private print(node: RouteNode, level = 1, before = '', isEnd = false) {
+    const ident = isEnd ? '└──' : '├──';
+    const type = node.handler ? '+' : '-';
+
+    console.log(`${before}${ident} ${type} ${node.prefix}`);
+
+    const children = Object.values(node.children);
+    const size = children.length;
+    const newBefore = before + (!isEnd && level > 1 ? '│  ' : '  ');
+
+    children.forEach((child, index) => {
+      const isEnd = index + 1 === size;
+      node.print(child, level + 1, newBefore, isEnd);
+    });
   }
 }
