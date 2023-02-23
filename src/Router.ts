@@ -62,6 +62,7 @@ export class Router {
     }
 
     currentNode.handler = handler;
+    currentNode.paramsName = paramsName;
   }
 
   find(method: string, path: string) {
@@ -126,8 +127,7 @@ export class Router {
       for (let index = 0; index < paramsName.length; index++)
         params[paramsName[index]] = paramsValues[index];
 
-    if (type === NodeType.WILDCARD)
-      params['*'] = path.slice(lastWildcardIndex + 1);
+    if (type === NodeType.WILDCARD) params['*'] = path.slice(lastWildcardIndex);
 
     return { handler, params };
   }
