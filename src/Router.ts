@@ -1,7 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { RouteNode } from './RouteNode';
 import { RouteTreeMapper } from './RouteTreeMapper';
-import { Stack } from './Stack';
 import { BrotherNode, HttpMethod, NodeType, RouteHandler } from './types';
 
 const WILDCARD = 42;
@@ -41,6 +40,7 @@ export class Router {
       if (isWildcard) {
         const wildcardPath = path.slice(pathIndex, index - 1) + '*';
         currentNode = currentNode.insert(wildcardPath);
+        paramsName.push('"*"');
         break;
       }
 
@@ -72,26 +72,28 @@ export class Router {
     if (!currentNode) return null;
 
     let readLength = 0;
-    let totalLength = path.length;
+    const totalLength = path.length;
 
-    let wildcardNode = currentNode.wildcardNode;
-    let lastWildcardIndex = 0;
-
-    const nodeStack = new Stack<BrotherNode>();
-    const params: { [key: string]: string } = {};
+    const nodeStack = new Array<BrotherNode>();
     const paramsValues: string[] = [];
 
     while (true) {
-      if (readLength === totalLength) break;
+      if (readLength === totalLength) {
+        const { handler, buildParamsObject } = currentNode;
+        const params: { [key: string]: string } =
+          buildParamsObject(paramsValues);
+
+        return { handler, params };
+      }
 
       currentNode = currentNode.next(path, readLength, nodeStack);
 
-      if (!currentNode) {
-        if (nodeStack.isEmpty()) return null;
+      if (currentNode === null) {
+        if (nodeStack.length === 0) return null;
 
-        const brother = nodeStack.pop() as BrotherNode;
-        readLength = brother.pathIndex;
-        currentNode = brother.node;
+        const { node, pathIndex } = nodeStack.pop() as BrotherNode;
+        readLength = pathIndex;
+        currentNode = node;
       }
 
       if (currentNode.type === NodeType.PARAMETRIC) {
@@ -107,30 +109,10 @@ export class Router {
       readLength += currentNode.prefix.length;
 
       if (currentNode.type === NodeType.WILDCARD) {
-        lastWildcardIndex = readLength;
+        paramsValues.push(path.slice(readLength));
         break;
       }
-
-      if (currentNode.wildcardNode) {
-        wildcardNode = currentNode.wildcardNode;
-        lastWildcardIndex = readLength;
-      }
     }
-
-    if (!currentNode || !currentNode.handler) {
-      if (!wildcardNode) return null;
-      currentNode = wildcardNode;
-    }
-
-    const { type, handler, paramsName } = currentNode;
-
-    if (paramsName)
-      for (let index = 0; index < paramsName.length; index++)
-        params[paramsName[index]] = paramsValues[index];
-
-    if (type === NodeType.WILDCARD) params['*'] = path.slice(lastWildcardIndex);
-
-    return { handler, params };
   }
 
   lookup(request: IncomingMessage, response: ServerResponse) {

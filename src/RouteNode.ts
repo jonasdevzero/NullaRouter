@@ -1,4 +1,3 @@
-import { Stack } from './Stack';
 import { BrotherNode, NodeType, RouteHandler } from './types';
 
 const WILDCARD = 42;
@@ -12,13 +11,41 @@ export class RouteNode {
 
   children: { [key: string]: RouteNode } = {};
   parametricNode: RouteNode | null = null;
-  paramsName: string[] | null = null;
-
   wildcardNode: RouteNode | null = null;
+
+  private parameters: string[] | null = null;
+  buildParamsObject: Function = () => ({});
 
   constructor(prefix: string) {
     this.prefix = prefix;
     this.setupMatch();
+  }
+
+  get paramsName() {
+    return this.parameters;
+  }
+
+  set paramsName(paramsName: string[] | null) {
+    this.parameters = paramsName;
+    this.setupBuildParamsObject();
+  }
+
+  private setupBuildParamsObject() {
+    if (this.parameters === null) {
+      this.buildParamsObject = new Function('return {}');
+      return;
+    }
+
+    const lines: string[] = [];
+
+    for (let index = 0; index < this.parameters.length; index++) {
+      lines.push(`${this.parameters[index]}: paramsValues[${index}]`);
+    }
+
+    this.buildParamsObject = new Function(
+      'paramsValues',
+      `return {${lines.join(',')}}`
+    );
   }
 
   private setupMatch() {
@@ -107,13 +134,10 @@ export class RouteNode {
     return node;
   }
 
-  next(path: string, startIndex: number, nodeStack: Stack<BrotherNode>) {
+  next(path: string, startIndex: number, nodeStack: Array<BrotherNode>) {
     const node = this.findNextStaticNode(path, startIndex);
 
-    if (!node) return this.parametricNode || this.wildcardNode;
-
-    if (this.wildcardNode !== null)
-      nodeStack.push({ pathIndex: startIndex, node: this.wildcardNode });
+    if (node === null) return this.parametricNode || this.wildcardNode;
 
     if (this.parametricNode !== null)
       nodeStack.push({ pathIndex: startIndex, node: this.parametricNode });
@@ -139,7 +163,7 @@ export class RouteNode {
 
     const ident = isEnd ? '└───' : '├───';
     const handler = node.handler ? '+' : '-';
-    const params = node.paramsName?.toString() || '';
+    const params = node.parameters?.toString() || '';
 
     console.log(`${before}${ident} ${handler} ${node.prefix} [${params}]`);
 
