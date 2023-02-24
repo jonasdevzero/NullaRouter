@@ -137,7 +137,7 @@ export class RouteNode {
   private print(node: RouteNode | null, level = 1, before = '', isEnd = false) {
     if (node === null) return;
 
-    const ident = isEnd ? '└──' : '├──';
+    const ident = isEnd ? '└───' : '├───';
     const handler = node.handler ? '+' : '-';
     const params = node.paramsName?.toString() || '';
 
@@ -151,7 +151,7 @@ export class RouteNode {
 
     const children = Object.values(nodes);
     const size = children.length;
-    const newBefore = before + (!isEnd && level > 1 ? '│  ' : '  ');
+    const newBefore = before + (!isEnd && level > 1 ? '│    ' : '    ');
 
     children.forEach((child, index) => {
       const isEnd = index + 1 === size;

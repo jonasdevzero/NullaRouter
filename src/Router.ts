@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { RouteNode } from './RouteNode';
+import { RouteTreeMapper } from './RouteTreeMapper';
 import { Stack } from './Stack';
 import { BrotherNode, HttpMethod, NodeType, RouteHandler } from './types';
 
@@ -7,7 +8,7 @@ const WILDCARD = 42;
 const PARAMETRIC = 58;
 
 export class Router {
-  readonly trees = {} as { [key: string]: RouteNode };
+  readonly trees = {} as { [key in HttpMethod]: RouteNode };
 
   on(method: HttpMethod, path: string, handler: RouteHandler) {
     if (!this.trees[method]) {
@@ -65,7 +66,7 @@ export class Router {
     currentNode.paramsName = paramsName;
   }
 
-  find(method: string, path: string) {
+  find(method: HttpMethod, path: string) {
     let currentNode: RouteNode | null = this.trees[method];
 
     if (!currentNode) return null;
@@ -136,7 +137,7 @@ export class Router {
     const { method = 'GET', url = '/' } = request;
     const [path] = url.split('?');
 
-    const route = this.find(method, path);
+    const route = this.find(method as HttpMethod, path);
 
     if (!route || !route.handler) {
       response.statusCode = 404;
@@ -182,5 +183,15 @@ export class Router {
 
   trace(path: string, handler: RouteHandler) {
     this.on('TRACE', path, handler);
+  }
+
+  merge(router: Router, prefix?: string) {
+    for (const tree of Object.entries(router.trees)) {
+      const [method, root] = tree as [HttpMethod, RouteNode];
+
+      RouteTreeMapper.map(root, prefix).forEach(({ fullPath, handler }) => {
+        this.on(method, fullPath, handler);
+      });
+    }
   }
 }
