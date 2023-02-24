@@ -1,15 +1,41 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { isPathPatternValid } from './helpers/validatePathPattern';
 import { RouteNode } from './RouteNode';
 import { RouteTreeMapper } from './RouteTreeMapper';
-import { BrotherNode, HttpMethod, NodeType, RouteHandler } from './types';
+import {
+  BrotherNode,
+  HttpMethod,
+  NodeType,
+  NotFoundRoute,
+  RouteHandler,
+  RouterOptions,
+} from './types';
 
 const WILDCARD = 42;
 const PARAMETRIC = 58;
 
+const defaultConfig = {
+  onNotFound(_: IncomingMessage, response: ServerResponse) {
+    response.statusCode = 404;
+    response.end('Route Not Found');
+  },
+};
+
 export class Router {
   readonly trees = {} as { [key in HttpMethod]: RouteNode };
+  private readonly config: RouterOptions;
+  private readonly onNotFound: NotFoundRoute;
+
+  constructor(config: RouterOptions = {}) {
+    this.config = config;
+    this.onNotFound = config.onNotFound || defaultConfig.onNotFound;
+  }
 
   on(method: HttpMethod, path: string, handler: RouteHandler) {
+    if (!isPathPatternValid(path, this.config.patterns)) {
+      throw new SyntaxError(`path pattern is not valid, path: "${path}"`);
+    }
+
     if (!this.trees[method]) {
       this.trees[method] = new RouteNode('\0');
     }
@@ -122,8 +148,7 @@ export class Router {
     const route = this.find(method as HttpMethod, path);
 
     if (!route || !route.handler) {
-      response.statusCode = 404;
-      return response.end('Route not found');
+      return this.onNotFound(request, response);
     }
 
     const { handler, params } = route;

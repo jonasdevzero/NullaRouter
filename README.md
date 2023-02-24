@@ -1,6 +1,8 @@
 # Nulla Router
 
-:construction: In Development :construction: A very fast HTTP router based in prefix tree
+A very fast HTTP router based in prefix tree
+
+Supports all http methods: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `TRACE`, `CONNECT`, `OPTIONS`
 
 ## Example
 
@@ -19,8 +21,20 @@ const server = http.createServer((request, response) => {
 server.listen(5000);
 ```
 
-Supports all http methods: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `TRACE`, `CONNECT`, `OPTIONS`
+## Router Options
 
-## Future features
+```js
+  {
+    // handler for not found routes
+    onNotFound: (request: IncomingMessage, response: ServerResponse) => unknown,
 
-- Custom options
+    // enforces url patterns, options: ['any', 'camelCase', 'PascalCase', 'kebab-case', 'snake_case]
+    patterns: {
+      // normal path
+      path: 'camelCase',
+
+      // parameter name
+      param: 'camelCase',
+    }
+  }
+```

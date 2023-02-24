@@ -1,6 +1,28 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { RouteNode } from './RouteNode';
 
+export type Pattern =
+  | 'camelCase'
+  | 'snake_case'
+  | 'PascalCase'
+  | 'kebab-case'
+  | 'any';
+
+export interface PathPatterns {
+  path?: Pattern;
+  param?: Pattern;
+}
+
+export type NotFoundRoute = (
+  request: IncomingMessage,
+  response: ServerResponse
+) => unknown;
+
+export interface RouterOptions {
+  patterns?: PathPatterns;
+  onNotFound?: NotFoundRoute;
+}
+
 export enum NodeType {
   STATIC = 0,
   PARAMETRIC = 1,
