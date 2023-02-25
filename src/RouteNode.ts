@@ -14,7 +14,7 @@ export class RouteNode {
   wildcardNode: RouteNode | null = null;
 
   private parameters: string[] | null = null;
-  buildParamsObject: Function = () => ({});
+  buildParams: Function = () => ({});
 
   constructor(prefix: string) {
     this.prefix = prefix;
@@ -32,7 +32,7 @@ export class RouteNode {
 
   private setupBuildParamsObject() {
     if (this.parameters === null) {
-      this.buildParamsObject = new Function('return {}');
+      this.buildParams = new Function('return {}');
       return;
     }
 
@@ -42,7 +42,7 @@ export class RouteNode {
       lines.push(`${this.parameters[index]}: paramsValues[${index}]`);
     }
 
-    this.buildParamsObject = new Function(
+    this.buildParams = new Function(
       'paramsValues',
       `return {${lines.join(',')}}`
     );
@@ -135,20 +135,14 @@ export class RouteNode {
   }
 
   next(path: string, startIndex: number, nodeStack: Array<BrotherNode>) {
-    const node = this.findNextStaticNode(path, startIndex);
+    const node = this.children[path.charAt(startIndex)];
 
-    if (node === null) return this.parametricNode || this.wildcardNode;
+    if (node === undefined || !node.match(path, startIndex))
+      return this.parametricNode || this.wildcardNode;
 
     if (this.parametricNode !== null)
       nodeStack.push({ pathIndex: startIndex, node: this.parametricNode });
 
-    return node;
-  }
-
-  private findNextStaticNode(path: string, startIndex: number) {
-    let node: RouteNode | null = this.children[path.charAt(startIndex)];
-
-    if (!node || !node.match(path, startIndex)) return null;
     return node;
   }
 
