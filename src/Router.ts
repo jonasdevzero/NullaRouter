@@ -105,9 +105,8 @@ export class Router {
 
     while (true) {
       if (readLength === totalLength) {
-        const { handler, buildParamsObject } = currentNode;
-        const params: { [key: string]: string } =
-          buildParamsObject(paramsValues);
+        const { handler, buildParams } = currentNode;
+        const params: { [key: string]: string } = buildParams(paramsValues);
 
         return { handler, params };
       }
@@ -135,8 +134,8 @@ export class Router {
       readLength += currentNode.prefix.length;
 
       if (currentNode.type === NodeType.WILDCARD) {
+        readLength = totalLength;
         paramsValues.push(path.slice(readLength));
-        break;
       }
     }
   }
@@ -147,7 +146,7 @@ export class Router {
 
     const route = this.find(method as HttpMethod, path);
 
-    if (!route || !route.handler) {
+    if (route === null || route.handler === null) {
       return this.onNotFound(request, response);
     }
 
