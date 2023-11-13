@@ -1,6 +1,6 @@
 {
   "name": "nulla-router",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A very fast HTTP router",
   "main": "lib/cjs/index.js",
   "module": "lib/mjs/index.js",
