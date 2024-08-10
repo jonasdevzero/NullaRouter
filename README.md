@@ -1,6 +1,6 @@
-# Nulla Router
+<h1 align="center">Nulla Router</h1>
 
-A very fast HTTP router based in compact prefix tree, supports all http methods, route params and wildcards.
+A very fast HTTP router NPM package based in compact prefix tree, supports all http methods, route params and wildcards.
 
 - [Install](#install)
 - [Example](#example)
